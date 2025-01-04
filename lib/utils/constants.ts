@@ -20,6 +20,6 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 ];
 
 // 其他常量保持不变
-export const SILENCE_THRESHOLD = 1500; // 静音检测阈值（毫秒）
+export const SILENCE_THRESHOLD = 500; // 静音检测阈值（毫秒）
 export const AUDIO_SAMPLE_RATE = 44100;
 export const MAX_RECORDING_TIME = 60000; // 最大录音时间（毫秒）
