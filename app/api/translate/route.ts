@@ -79,7 +79,7 @@ Rules:
     return new Response(
       JSON.stringify({ 
         error: 'Translation failed',
-        details: error.message 
+        details: (error instanceof Error) ? error.message : 'Unknown error' 
       }),
       {
         status: 500,

@@ -11,7 +11,17 @@ export async function translateText(
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     const prompt = `Translate the following text to ${targetLanguage}: "${text}"`;
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    let translation = result.response.text().trim();
+
+    // 清理输出
+    translation = translation
+      .replace(/^["'\s]+|["'\s]+$/g, '') // 移除首尾引号和空白
+      .replace(/\(.*?\)/g, '') // 移除括号内容
+      .replace(/Or:.*$/g, '') // 移除 "Or:" 及其后面的内容
+      .replace(/\n/g, '') // 移除换行
+      .trim();
+
+    return translation; // 确保返回清理后的翻译
   } catch (error) {
     console.error('Translation error:', error);
     throw new Error('Translation failed');
@@ -20,7 +30,7 @@ export async function translateText(
 
 // app/api/translate/route.ts
 import { NextResponse } from 'next/server';
-import { translateText } from '@/lib/translation/gemini';
+import { translateText as geminiTranslateText } from '@/lib/translation/gemini';
 
 export async function POST(request: Request) {
   try {
@@ -33,7 +43,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const translation = await translateText(text, targetLanguage);
+    const translation = await geminiTranslateText(text, targetLanguage);
     
     return NextResponse.json({ translation });
   } catch (error) {

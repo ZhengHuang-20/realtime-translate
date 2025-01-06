@@ -11,11 +11,6 @@ export const SUPPORTED_LANGUAGES: Language[] = [
     code: 'zh-CN', 
     name: '中文', 
     voiceCode: 'zh-CN' 
-  },
-  { 
-    code: 'ms-MY', 
-    name: 'Bahasa Melayu', 
-    voiceCode: 'ms-MY' 
   }
 ];
 

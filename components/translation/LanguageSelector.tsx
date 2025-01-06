@@ -110,7 +110,7 @@ interface VolumeVisualizerProps {
 
 export function VolumeVisualizer({ stream }: VolumeVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number>();
+  const animationRef = useRef<number| undefined>(undefined);
   
   useEffect(() => {
     if (!stream || !canvasRef.current) return;
