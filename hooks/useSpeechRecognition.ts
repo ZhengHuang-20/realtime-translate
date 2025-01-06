@@ -55,12 +55,11 @@ export const useSpeechRecognition = (
   
   const stopListening = useCallback(() => {
     if (recognition.current) {
-      recognition.current.stop();
-      setIsListening(false);
-      
       if (silenceTimeout.current) {
         clearTimeout(silenceTimeout.current);
       }
+      recognition.current.stop();
+      setIsListening(false);
       currentTranscript.current = ''; // 清除转录内容
     }
   }, []);

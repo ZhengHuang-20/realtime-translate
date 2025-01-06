@@ -37,11 +37,13 @@ export default function Home() {
       if (!response.ok) throw new Error('Translation failed');
       
       const { translation } = await response.json();
-      setTranslatedText(translation);
       
+      // 先展示翻译后的文本
+      await setTranslatedText(translation);
+      setIsTranslating(false);
       // 播放翻译后的语音
       await speakText(translation, targetLanguage);
-
+      
       // 清除源文本和识别内容
       setSourceText('');
       if (speechRecognitionRef.current?.clearTranscript) {
@@ -83,7 +85,6 @@ export default function Home() {
           <AudioRecorder
             sourceLanguage={sourceLanguage}
             onTranscript={handleTranscript}
-            onRecognitionInit={onSpeechRecognition}
           />
           
           <TranslationResult

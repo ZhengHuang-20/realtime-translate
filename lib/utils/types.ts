@@ -19,6 +19,12 @@ export interface Language {
     error?: string;
   }
   
+  export interface AudioRecorderProps {
+    sourceLanguage: string;
+    onTranscript: (text: string) => Promise<void>;
+    onRecognitionInit?: (recognition: any) => void;
+  }
+  
   // lib/utils/constants.ts
   export const SUPPORTED_LANGUAGES: Language[] = [
     { code: 'en-US', name: 'English', voiceCode: 'en-US' },
