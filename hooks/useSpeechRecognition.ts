@@ -4,7 +4,8 @@ import { SILENCE_THRESHOLD } from '@/lib/utils/constants';
 
 export const useSpeechRecognition = (
   language: string,
-  onTranscript: (text: string) => void
+  onTranscript: (text: string) => void,
+  onTranscriptComplete?: () => void
 ) => {
   const recognition = useRef<any>(null);
   const silenceTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -26,7 +27,7 @@ export const useSpeechRecognition = (
   }, []);
   
   const startListening = useCallback(() => {
-    if (recognition.current) {
+    if (recognition.current && !isListening) {
       recognition.current.lang = language;
       currentTranscript.current = ''; // 重置当前转录内容
       
@@ -43,6 +44,7 @@ export const useSpeechRecognition = (
           
           silenceTimeout.current = setTimeout(() => {
             currentTranscript.current = transcript;
+            stopListening();
             onTranscript(transcript);
           }, SILENCE_THRESHOLD);
         }
@@ -54,14 +56,21 @@ export const useSpeechRecognition = (
   }, [language, onTranscript]);
   
   const stopListening = useCallback(() => {
-    if (recognition.current) {
-      if (silenceTimeout.current) {
-        clearTimeout(silenceTimeout.current);
+    return new Promise<void>((resolve) => {
+      if (recognition.current) {
+        if (silenceTimeout.current) {
+          clearTimeout(silenceTimeout.current);
+        }
+        recognition.current.onend = () => {
+          setIsListening(false);
+          currentTranscript.current = ''; // 清除转录内容
+          resolve();
+        };
+        recognition.current.stop();
+      } else {
+        resolve();
       }
-      recognition.current.stop();
-      setIsListening(false);
-      currentTranscript.current = ''; // 清除转录内容
-    }
+    });
   }, []);
 
   const clearTranscript = useCallback(() => {

@@ -11,13 +11,16 @@ export function AudioRecorder({ sourceLanguage, onTranscript }: AudioRecorderPro
   const { state, startRecording, stopRecording } = useAudioRecorder();
   const { isListening, startListening, stopListening } = useSpeechRecognition(
     sourceLanguage,
-    onTranscript
+    async (text) => {
+      await onTranscript(text);
+      startListening();
+    }
   );
 
   const handleToggleRecording = async () => {
     if (state.isRecording) {
       stopRecording();
-      stopListening();
+      await stopListening();
     } else {
       await startRecording();
       startListening();
