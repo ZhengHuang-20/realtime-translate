@@ -11,6 +11,8 @@ export const useSpeechRecognition = (
   const silenceTimeout = useRef<NodeJS.Timeout | null>(null);
   const [isListening, setIsListening] = useState(false);
   const currentTranscript = useRef<string>('');
+  const isRecognitionActive = useRef(false);
+  const shouldContinue = useRef(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
@@ -27,56 +29,68 @@ export const useSpeechRecognition = (
   }, []);
   
   const startListening = useCallback(() => {
-    if (recognition.current && !isListening) {
-      recognition.current.lang = language;
-      currentTranscript.current = ''; // 重置当前转录内容
-      
-      recognition.current.onresult = (event: any) => {
-        const latest = event.results[event.results.length - 1];
-        const transcript = latest[0].transcript;
-        
-        // 只处理最新的一段语音
-        if (latest.isFinal) {
-          // 如果没有正在进行的计时器，创建新的计时器
-          if (silenceTimeout.current) {
-            clearTimeout(silenceTimeout.current);
-          }
+    if (recognition.current) {
+      try {
+        if (!isRecognitionActive.current) {
+          shouldContinue.current = true;
+          recognition.current.lang = language;
+          currentTranscript.current = '';
           
-          silenceTimeout.current = setTimeout(() => {
-            currentTranscript.current = transcript;
-            stopListening();
-            onTranscript(transcript);
-          }, SILENCE_THRESHOLD);
+          recognition.current.onresult = (event: any) => {
+            const latest = event.results[event.results.length - 1];
+            const transcript = latest[0].transcript;
+            
+            if (latest.isFinal) {
+              if (silenceTimeout.current) {
+                clearTimeout(silenceTimeout.current);
+              }
+              
+              silenceTimeout.current = setTimeout(() => {
+                currentTranscript.current = transcript;
+                stopListening();
+                onTranscript(transcript);
+              }, SILENCE_THRESHOLD);
+            }
+          };
+
+          recognition.current.onstart = () => {
+            console.log('Recognition started');
+            isRecognitionActive.current = true;
+            setIsListening(true);
+          };
+
+          recognition.current.onend = () => {
+            console.log('Recognition ended');
+            isRecognitionActive.current = false;
+            setIsListening(false);
+
+            if (shouldContinue.current) {
+              recognition.current?.start();
+            }
+          };
+
+          recognition.current.start();
+        } else {
+          console.log('Recognition is already active');
         }
-      };
-      
-      recognition.current.start();
-      setIsListening(true);
+      } catch (error) {
+        console.error('Error starting recognition:', error);
+        isRecognitionActive.current = false;
+        setIsListening(false);
+      }
     }
   }, [language, onTranscript]);
   
   const stopListening = useCallback(() => {
-    return new Promise<void>((resolve) => {
-      if (recognition.current) {
-        if (silenceTimeout.current) {
-          clearTimeout(silenceTimeout.current);
-        }
-        recognition.current.onend = () => {
-          setIsListening(false);
-          currentTranscript.current = ''; // 清除转录内容
-          resolve();
-        };
-        recognition.current.stop();
-      } else {
-        resolve();
-      }
-    });
+    if (recognition.current) {
+      shouldContinue.current = false;
+      recognition.current.stop();
+    }
   }, []);
 
   const clearTranscript = useCallback(() => {
     currentTranscript.current = '';
     if (recognition.current) {
-      // 重新启动识别以清除缓存
       recognition.current.abort();
       recognition.current.start();
     }
