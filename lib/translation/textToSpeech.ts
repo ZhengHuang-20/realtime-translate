@@ -4,7 +4,7 @@
 // 预定义的优质声音映射
 const PREFERRED_VOICES = {
   'en-US': {
-    name: 'en-GB-Standard-B', // Use British male voice
+    name: 'en-GB-Journey-D', // Use British male voice
     naturalness: 0.9,
     pitch: 1.0,
     speakingRate: 1.0
@@ -26,10 +26,12 @@ const PREFERRED_VOICES = {
 export function speakText(text: string, language: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
+      const voiceSettings = PREFERRED_VOICES[language as keyof typeof PREFERRED_VOICES] || {};
+      
       const response = await fetch('/api/text-to-speech', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, language }),
+        body: JSON.stringify({ text, language, ...voiceSettings }),
       });
 
       if (!response.ok) {
