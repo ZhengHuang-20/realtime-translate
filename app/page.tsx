@@ -25,29 +25,26 @@ export default function Home() {
 
   // 处理翻译
   const handleTranslation = async (text: string) => {
-
     if (isTranslating) return;
     try {
-
       setIsTranslating(true);
-      
+
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, targetLanguage }),
       });
-      
+
       if (!response.ok) throw new Error('Translation failed');
 
       const { translation } = await response.json();
-      
-      // 先展示翻译后的文本
-      await setTranslatedText(translation);
-      // 播放翻译后的语音
+      // Immediately display the translated text
+      setTranslatedText(translation);
+
+      // Play the translated speech
       await speakText(translation, targetLanguage);
-      // 清除识别内容
-      setIsTranslating(false);
-      // 清除源文本和识别内容
+
+      // Clear the source text
       setSourceText('');
     } catch (error) {
       console.error('Translation error:', error);
@@ -88,7 +85,6 @@ export default function Home() {
           <TranslationResult
             sourceText={sourceText}
             translatedText={translatedText}
-            isLoading={isTranslating}
           />
         </div>
      
