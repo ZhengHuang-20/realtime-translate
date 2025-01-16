@@ -27,6 +27,7 @@ export default function Home() {
   const handleTranslation = async (text: string) => {
     if (isTranslating) return;
     try {
+      console.log('Starting translation for text:', text);
       setIsTranslating(true);
 
       const response = await fetch('/api/translate', {
@@ -38,6 +39,7 @@ export default function Home() {
       if (!response.ok) throw new Error('Translation failed');
 
       const { translation } = await response.json();
+      console.log('Translation received:', translation);
       // Immediately display the translated text
       setTranslatedText(translation);
 
@@ -50,6 +52,7 @@ export default function Home() {
       console.error('Translation error:', error);
     } finally {
       setIsTranslating(false);
+      console.log('Translation process completed');
     }
   };
 

@@ -26,6 +26,7 @@ const PREFERRED_VOICES = {
 export function speakText(text: string, language: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
+      console.log('Starting text-to-speech for text:', text);
       const voiceSettings = PREFERRED_VOICES[language as keyof typeof PREFERRED_VOICES] || {};
       
       const response = await fetch('/api/text-to-speech', {
@@ -39,10 +40,12 @@ export function speakText(text: string, language: string): Promise<void> {
       }
 
       const { audioUrl } = await response.json();
+      console.log('Audio URL received:', audioUrl);
 
       const audio = new Audio(audioUrl);
       audio.play();
       audio.onended = () => {
+        console.log('Audio playback completed');
         resolve();
       };
       audio.onerror = (error) => {

@@ -32,6 +32,7 @@ export const useSpeechRecognition = (
     if (recognition.current) {
       try {
         if (!isRecognitionActive.current) {
+          console.log('Starting speech recognition');
           shouldContinue.current = true;
           recognition.current.lang = language;
           currentTranscript.current = '';
@@ -39,6 +40,7 @@ export const useSpeechRecognition = (
           recognition.current.onresult = (event: any) => {
             const latest = event.results[event.results.length - 1];
             const transcript = latest[0].transcript;
+            console.log('Transcript received:', transcript);
             
             if (latest.isFinal) {
               if (silenceTimeout.current) {
