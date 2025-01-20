@@ -1,31 +1,55 @@
 // lib/translation/gemini.ts
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { translationCache } from '@/lib/utils/cache';
+import { logger } from '@/lib/utils/logger';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_KEY!);
+
+const getTranslationPrompt = (text: string, targetLanguage: string): string => {
+  const basePrompt = `You are a professional translator. Translate this text to ${targetLanguage}:
+"${text}"
+
+Rules:
+1. Provide only the direct translation
+2. Ensure natural, conversational language
+3. No explanations or alternatives
+4. No additional context or notes
+5. Maintain the original tone and formality`;
+
+  return basePrompt;
+};
 
 export async function translateText(
   text: string,
   targetLanguage: string
 ): Promise<string> {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    const prompt = `Translate the following text to ${targetLanguage}: "${text}"`;
-    const result = await model.generateContent(prompt);
-    let translation = result.response.text().trim();
-
-    // 清理输出
-    translation = translation
-      .replace(/^["'\s]+|["'\s]+$/g, '') // 移除首尾引号和空白
-      .replace(/\(.*?\)/g, '') // 移除括号内容
-      .replace(/Or:.*$/g, '') // 移除 "Or:" 及其后面的内容
-      .replace(/\n/g, '') // 移除换行
-      .trim();
-
-    return translation; // 确保返回清理后的翻译
-  } catch (error) {
-    console.error('Translation error:', error);
-    throw new Error('Translation failed');
+  const cacheKey = `${text}:${targetLanguage}`;
+  const cachedTranslation = translationCache.get(cacheKey);
+  
+  if (cachedTranslation) {
+    logger.info('Translation cache hit', { text, targetLanguage });
+    return cachedTranslation;
   }
+
+  return await logger.withPerformanceLogging('translation', async () => {
+    try {
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+      const prompt = getTranslationPrompt(text, targetLanguage);
+      const result = await model.generateContent(prompt);
+      let translation = result.response.text().trim()
+        .replace(/^["'\s]+|["'\s]+$/g, '')
+        .replace(/\(.*?\)/g, '')
+        .replace(/Or:.*$/g, '')
+        .replace(/\n/g, '')
+        .trim();
+
+      translationCache.set(cacheKey, translation);
+      return translation;
+    } catch (error) {
+      logger.error('Translation error:', error);
+      throw new Error('Translation failed');
+    }
+  });
 }
 
 // app/api/translate/route.ts
