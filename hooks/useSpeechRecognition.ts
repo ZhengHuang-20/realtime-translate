@@ -13,7 +13,7 @@ export const useSpeechRecognition = (
   const isRecognitionActive = useRef(false);
   const shouldContinue = useRef(true);
   const currentTranscript = useRef('');
-  const silenceTimeout = useRef<NodeJS.Timeout>();
+  const silenceTimeout = useRef<NodeJS.Timeout | null>(null);
   const startTime = useRef<number>(0);
 
   useEffect(() => {

@@ -18,7 +18,9 @@ export class Cache<T> {
     if (this.cache.size >= this.maxSize) {
       // 删除最旧的项
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
     this.cache.set(key, { value, timestamp: Date.now() });
   }
