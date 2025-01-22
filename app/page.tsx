@@ -10,17 +10,38 @@ import { logger } from '@/lib/utils/logger';
 
 
 
+// 添加导出功能的工具函数
+const exportTranslations = (translations: Array<{ sourceText: string; translatedText: string }>) => {
+  const content = translations.map(t => 
+    `原文：${t.sourceText}\n译文：${t.translatedText}\n\n`
+  ).join('');
+  
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `translations-${new Date().toISOString().slice(0,10)}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};
+
 export default function Home() {
   const [sourceLanguage, setSourceLanguage] = useState('zh-CN');
   const [targetLanguage, setTargetLanguage] = useState('en-US');
-  const [sourceText, setSourceText] = useState('');
-  const [translatedText, setTranslatedText] = useState('');
+  // 修改状态管理，使用数组存储所有的翻译记录
+  const [translations, setTranslations] = useState<Array<{
+    sourceText: string;
+    translatedText: string;
+  }>>([]);
+  const [currentSourceText, setCurrentSourceText] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
 
   // 处理语音识别结果
   const handleTranscript = async (text: string) => {
     if (!text.trim()) return;
-    setSourceText(text);
+    setCurrentSourceText(text);
     await handleTranslation(text);
   };
 
@@ -41,14 +62,18 @@ export default function Home() {
 
       const { translation } = await response.json();
       logger.info('Translation received', { translation });
-      // Immediately display the translated text
-      setTranslatedText(translation);
+      
+      // 添加新的翻译记录到数组中
+      setTranslations(prev => [...prev, {
+        sourceText: text,
+        translatedText: translation
+      }]);
 
-      // Play the translated speech
+      // 播放翻译后的语音
       await speakText(translation, targetLanguage);
-
-      // Clear the source text
-      setSourceText('');
+      
+      // 清空当前输入
+      setCurrentSourceText('');
     } catch (error) {
       logger.error('Translation error', error);
     } finally {
@@ -57,41 +82,59 @@ export default function Home() {
     }
   };
 
-
-
-
   return (
     <main className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-7xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">
           Real-time Speech Translator
         </h1>
         
-        <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <LanguageSelector
-              value={sourceLanguage}
-              onChange={setSourceLanguage}
-              label="Source Language"
-            />
-            <LanguageSelector
-              value={targetLanguage}
-              onChange={setTargetLanguage}
-              label="Target Language"
-            />
+        <div className="grid grid-cols-12 gap-6">
+          {/* 左侧操作区域 */}
+          <div className="col-span-7">
+            <div className="bg-white rounded-xl shadow-lg p-6 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <LanguageSelector
+                  value={sourceLanguage}
+                  onChange={setSourceLanguage}
+                  label="Source Language"
+                />
+                <LanguageSelector
+                  value={targetLanguage}
+                  onChange={setTargetLanguage}
+                  label="Target Language"
+                />
+              </div>
+              
+              <AudioRecorder
+                sourceLanguage={sourceLanguage}
+                onTranscript={handleTranscript}
+              />
+            </div>
           </div>
-          
-          <AudioRecorder
-            sourceLanguage={sourceLanguage}
-            onTranscript={handleTranscript}
-          />
-          
-          <TranslationResult
-            sourceText={sourceText}
-            translatedText={translatedText}
-          />
+
+          {/* 右侧翻译记录区域 */}
+          <div className="col-span-5">
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">翻译记录</h2>
+                {translations.length > 0 && (
+                  <button
+                    onClick={() => exportTranslations(translations)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    导出记录
+                  </button>
+                )}
+              </div>
+              <TranslationResult
+                sourceText={currentSourceText}
+                translatedText=""
+                translations={translations}
+              />
+            </div>
+          </div>
         </div>
-     
       </div>
     </main>
   );
