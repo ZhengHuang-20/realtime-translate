@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { AudioRecorder } from '@/components/audio/AudioRecorder';
 import { TranslationResult } from '@/components/translation/TranslationResult';
-import { speakText } from '@/lib/translation/textToSpeech';
+// import { speakText } from '@/lib/translation/textToSpeech';
 import { logger } from '@/lib/utils/logger';
 
 
@@ -46,7 +46,7 @@ export default function Home() {
   };
 
   // 处理翻译
-  const handleTranslation = async (text: string) => {
+  const handleTranslation = async (text: string, shouldSpeak = true) => {
     if (isTranslating) return;
     try {
       logger.info('Starting translation', { text });
@@ -63,19 +63,32 @@ export default function Home() {
       const { translation } = await response.json();
       logger.info('Translation received', { translation });
       
-      // 添加新的翻译记录到数组中
       setTranslations(prev => [...prev, {
         sourceText: text,
         translatedText: translation
       }]);
 
-      // 播放翻译后的语音
-      await speakText(translation, targetLanguage);
+      // 使用 Web Speech API 进行文本朗读
+      if (shouldSpeak && window.speechSynthesis) {
+        try {
+          const utterance = new SpeechSynthesisUtterance(translation);
+          utterance.lang = targetLanguage;
+          window.speechSynthesis.speak(utterance);
+          logger.info('Speaking text using browser synthesis', { targetLanguage });
+        } catch (speechError) {
+          logger.error('Browser speech synthesis failed', {
+            error: speechError instanceof Error ? speechError.message : speechError
+          });
+        }
+      }
       
-      // 清空当前输入
       setCurrentSourceText('');
     } catch (error) {
-      logger.error('Translation error', error);
+      logger.error('Translation error', {
+        error: error instanceof Error ? error.message : error,
+        text,
+        targetLanguage
+      });
     } finally {
       setIsTranslating(false);
       logger.info('Translation process completed');
