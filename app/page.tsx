@@ -66,7 +66,7 @@ export default function Home() {
       setTranslations(prev => [...prev, {
         sourceText: text,
         translatedText: translation
-      }]);
+      }, ...prev]);
 
       // 使用 Web Speech API 进行文本朗读
       if (shouldSpeak && window.speechSynthesis) {

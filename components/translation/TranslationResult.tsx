@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useRef, useEffect } from 'react';
 
 interface TranslationResultProps {
   sourceText: string;
@@ -10,18 +10,10 @@ interface TranslationResultProps {
 }
 
 export function TranslationResult({ sourceText, translatedText, translations }: TranslationResultProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // 自动滚动到最新的翻译
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [translations]);
-
+  // 移除滚动引用和自动滚动逻辑
+  
   return (
     <div 
-      ref={scrollRef}
       className="h-[calc(100vh-300px)] overflow-y-auto pr-2 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
     >
       {/* 当前识别的文本 */}
@@ -31,7 +23,7 @@ export function TranslationResult({ sourceText, translatedText, translations }: 
         </div>
       )}
 
-      {/* 历史翻译记录 */}
+      {/* 历史翻译记录 - 不需要修改，因为数据结构已经改变 */}
       {translations.map((item, index) => (
         <div 
           key={index} 

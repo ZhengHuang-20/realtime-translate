@@ -5,8 +5,7 @@ import { SILENCE_THRESHOLD } from '@/lib/utils/constants';
 
 export const useSpeechRecognition = (
   language: string,
-  onTranscript: (text: string) => void,
-  onTranscriptComplete?: () => void
+  onTranscript: (text: string) => void
 ) => {
   const [isListening, setIsListening] = useState(false);
   const recognition = useRef<any>(null);
@@ -36,7 +35,7 @@ export const useSpeechRecognition = (
       recognition.current.stop();
       isRecognitionActive.current = false;
       setIsListening(false);
-      logger.performance('speech-recognition-session', startTime.current);
+      logger.performance?.('speech-recognition-session', startTime.current);
     }
   }, []);
 

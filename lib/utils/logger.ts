@@ -22,7 +22,7 @@ export const logger = {
       : `[${timestamp}] ERROR: ${message}`;
     console.error(logMessage);
   },
-
+  
   performance: (action: string, startTime: number) => {
     const duration = Date.now() - startTime;
     const timestamp = new Date().toISOString();
@@ -45,4 +45,4 @@ export const logger = {
       throw error;
     }
   }
-}; 
+};
