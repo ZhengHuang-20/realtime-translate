@@ -1,11 +1,7 @@
 // components/audio/AudioRecorder.tsx
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
-
-interface AudioRecorderProps {
-  sourceLanguage: string;
-  onTranscript: (text: string) => void;
-}
+import { AudioRecorderProps } from '@/lib/utils/types';
 
 export function AudioRecorder({ sourceLanguage, onTranscript }: AudioRecorderProps) {
   const { state, startRecording, stopRecording } = useAudioRecorder();
