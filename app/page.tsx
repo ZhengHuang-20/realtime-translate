@@ -42,7 +42,35 @@ export default function Home() {
   const handleTranscript = async (text: string) => {
     if (!text.trim()) return;
     setCurrentSourceText(text);
-    await handleTranslation(text);
+    
+    try {
+      // 先使用Gemini校正识别文本
+      const correctionResponse = await fetch('/api/correct-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text }),
+      });
+      
+      if (!correctionResponse.ok) {
+        throw new Error('文本校正失败');
+      }
+      
+      const { correctedText } = await correctionResponse.json();
+      logger.info('Text corrected by Gemini', { 
+        original: text, 
+        corrected: correctedText 
+      });
+      
+      // 使用校正后的文本进行翻译
+      await handleTranslation(correctedText);
+    } catch (error) {
+      logger.error('Text correction error', {
+        error: error instanceof Error ? error.message : error,
+        text
+      });
+      // 如果校正失败，仍使用原始文本进行翻译
+      await handleTranslation(text);
+    }
   };
 
   // 处理翻译
@@ -63,7 +91,8 @@ export default function Home() {
       const { translation } = await response.json();
       logger.info('Translation received', { translation });
       
-      setTranslations(prev => [...prev, {
+      // 修改这里，只将新翻译添加到数组的开头
+      setTranslations(prev => [{
         sourceText: text,
         translatedText: translation
       }, ...prev]);
