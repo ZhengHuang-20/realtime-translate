@@ -32,7 +32,7 @@ function getBestVoice(language: string): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null;
   
   const settings = PREFERRED_VOICES[language as keyof typeof PREFERRED_VOICES];
-  if (!settings) return voices.find(voice => voice.lang.startsWith(language.split('-')[0]));
+  if (!settings) return voices.find(voice => voice.lang.startsWith(language.split('-')[0])) || null;
   
   // 尝试按偏好匹配
   let voice = voices.find(voice => {
@@ -42,7 +42,9 @@ function getBestVoice(language: string): SpeechSynthesisVoice | null {
   
   // 备选匹配
   if (!voice) {
-    voice = voices.find(voice => settings.fallbackPattern.test(voice.lang));
+    voice = 'fallbackPattern' in settings 
+      ? voices.find(voice => settings.fallbackPattern.test(voice.lang))
+      : undefined;
   }
   
   // 最后的备选
