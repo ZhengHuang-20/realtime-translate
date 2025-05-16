@@ -5,10 +5,8 @@ import { useState } from 'react';
 import { LanguageSelector } from '@/components/translation/LanguageSelector';
 import { AudioRecorder } from '@/components/audio/AudioRecorder';
 import { TranslationResult } from '@/components/translation/TranslationResult';
-// import { speakText } from '@/lib/translation/textToSpeech';
 import { logger } from '@/lib/utils/logger';
-
-
+import { speakTextEnhanced } from '@/lib/speech/enhancedTTS';
 
 // 添加导出功能的工具函数
 const exportTranslations = (translations: Array<{ sourceText: string; translatedText: string }>) => {
@@ -97,17 +95,23 @@ export default function Home() {
         translatedText: translation
       }, ...prev]);
 
-      // 使用 Web Speech API 进行文本朗读
+      // 使用增强的TTS功能
       if (shouldSpeak && window.speechSynthesis) {
         try {
-          const utterance = new SpeechSynthesisUtterance(translation);
-          utterance.lang = targetLanguage;
-          window.speechSynthesis.speak(utterance);
-          logger.info('Speaking text using browser synthesis', { targetLanguage });
+          await speakTextEnhanced(translation, targetLanguage);
+          logger.info('Enhanced TTS completed', { targetLanguage });
         } catch (speechError) {
-          logger.error('Browser speech synthesis failed', {
+          logger.error('Enhanced TTS failed', {
             error: speechError instanceof Error ? speechError.message : speechError
           });
+          // 回退到基本TTS
+          try {
+            const utterance = new SpeechSynthesisUtterance(translation);
+            utterance.lang = targetLanguage;
+            window.speechSynthesis.speak(utterance);
+          } catch (fallbackError) {
+            logger.error('Fallback TTS also failed', { error: fallbackError });
+          }
         }
       }
       
@@ -128,7 +132,7 @@ export default function Home() {
     <main className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4">
         <h1 className="text-3xl font-bold text-center mb-8">
-          Real-time Speech Translator
+          classroom-Real-time Speech Translator
         </h1>
         
         <div className="grid grid-cols-12 gap-6">
