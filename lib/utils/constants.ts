@@ -15,7 +15,8 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 ];
 
 // 优化配置参数
-export const SILENCE_THRESHOLD = 500; // 增加到800ms，减少空识别
+// 将SILENCE_THRESHOLD从500毫秒增加到更合理的值，如2000-3000毫秒
+export const SILENCE_THRESHOLD = 2500; // 2.5秒
 export const AUDIO_SAMPLE_RATE = 44100;
 export const MAX_RECORDING_TIME = 60000;
 export const AUDIO_CACHE_TIME = 3600000; // 1小时音频缓存
