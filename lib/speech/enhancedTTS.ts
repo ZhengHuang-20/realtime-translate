@@ -73,7 +73,7 @@ function preprocessText(text: string): string {
 
 // 将长文本分割成更小的片段
 // 优化文本分块策略，减少分块数量
-function splitTextIntoChunks(text: string): string[] {
+function splitTextIntoChunks(text: string): string[] | undefined {
   // 如果文本很短，直接返回
   if (text.length < 150) return [text]; // 增加阈值，减少不必要的分块
   
@@ -99,7 +99,7 @@ export function speakTextEnhanced(text: string, language: string): Promise<void>
       
       // 分割文本
       const chunks = splitTextIntoChunks(processedText);
-      logger.info('Speaking text in chunks', { chunkCount: chunks.length });
+      logger.info('Speaking text in chunks', { chunkCount: chunks?.length ?? 0 });
       
       // 获取语音设置
       const settings = PREFERRED_VOICES[language as keyof typeof PREFERRED_VOICES] || {
@@ -111,10 +111,10 @@ export function speakTextEnhanced(text: string, language: string): Promise<void>
       if (window.speechSynthesis.getVoices().length === 0) {
         // 在某些浏览器中，voices可能需要时间加载
         window.speechSynthesis.onvoiceschanged = () => {
-          speakChunks(chunks, 0);
+          speakChunks(chunks || [], 0);
         };
       } else {
-        speakChunks(chunks, 0);
+        speakChunks(chunks || [], 0);
       }
       
       // 递归函数来按顺序朗读文本块
