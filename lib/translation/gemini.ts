@@ -32,23 +32,37 @@ export async function translateText(
   }
 
   return await logger.withPerformanceLogging('translation', async () => {
-    try {
-      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-      const prompt = getTranslationPrompt(text, targetLanguage);
-      const result = await model.generateContent(prompt);
-      let translation = result.response.text().trim()
-        .replace(/^["'\s]+|["'\s]+$/g, '')
-        .replace(/\(.*?\)/g, '')
-        .replace(/Or:.*$/g, '')
-        .replace(/\n/g, '')
-        .trim();
+    let retries = 0;
+    const maxRetries = 3;
+    
+    while (retries < maxRetries) {
+      try {
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const prompt = getTranslationPrompt(text, targetLanguage);
+        const result = await model.generateContent(prompt);
+        let translation = result.response.text().trim()
+          .replace(/^["'\s]+|["'\s]+$/g, '')
+          .replace(/\(.*?\)/g, '')
+          .replace(/Or:.*$/g, '')
+          .replace(/\n/g, '')
+          .trim();
 
-      translationCache.set(cacheKey, translation);
-      return translation;
-    } catch (error) {
-      logger.error('Translation error:', error);
-      throw new Error('Translation failed');
+        translationCache.set(cacheKey, translation);
+        return translation;
+      } catch (error) {
+        retries++;
+        logger.error(`Translation error (attempt ${retries}/${maxRetries}):`, error);
+        
+        if (retries >= maxRetries) {
+          throw new Error('Translation failed after multiple attempts');
+        }
+        
+        // 指数退避策略
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries - 1)));
+      }
     }
+    
+    throw new Error('Translation failed');
   });
 }
 

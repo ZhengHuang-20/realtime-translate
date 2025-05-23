@@ -73,12 +73,37 @@ function preprocessText(text: string): string {
 
 // 将长文本分割成更小的片段
 // 优化文本分块策略，减少分块数量
-function splitTextIntoChunks(text: string): string[] | undefined {
+function splitTextIntoChunks(text: string): string[] {
   // 如果文本很短，直接返回
-  if (text.length < 150) return [text]; // 增加阈值，减少不必要的分块
+  if (text.length < 150) return [text];
   
-  // 其余逻辑保持不变
-  // ... 省略原有代码 ...
+  // 按句子分割文本
+  const sentenceBreaks = /[.!?。！？]+/g;
+  const sentences = text.split(sentenceBreaks).filter(s => s.trim().length > 0);
+  
+  // 组合句子成为合适大小的块
+  const chunks: string[] = [];
+  let currentChunk = "";
+  
+  for (const sentence of sentences) {
+    // 如果当前块加上新句子超过了理想长度，保存当前块并开始新块
+    if (currentChunk.length + sentence.length > 200) {
+      if (currentChunk.length > 0) {
+        chunks.push(currentChunk.trim());
+      }
+      currentChunk = sentence;
+    } else {
+      // 否则，将句子添加到当前块
+      currentChunk += (currentChunk ? " " : "") + sentence;
+    }
+  }
+  
+  // 添加最后一个块
+  if (currentChunk.length > 0) {
+    chunks.push(currentChunk.trim());
+  }
+  
+  return chunks;
 }
 
 

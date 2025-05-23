@@ -1,6 +1,7 @@
 interface CacheItem<T> {
   value: T;
   timestamp: number;
+  lastAccessed: number; // 添加最后访问时间
 }
 
 export class Cache<T> {
@@ -14,15 +15,30 @@ export class Cache<T> {
     this.ttl = ttl;
   }
 
-  set(key: string, value: T): void {
+  set(key: string, value: T, customTtl?: number): void {
     if (this.cache.size >= this.maxSize) {
-      // 删除最旧的项
-      const oldestKey = this.cache.keys().next().value;
-      if (oldestKey !== undefined) {
+      // 使用LRU策略 - 删除最久未访问的项
+      let oldestKey: string | undefined;
+      let oldestAccess = Date.now();
+      
+      for (const [k, item] of this.cache.entries()) {
+        if (item.lastAccessed < oldestAccess) {
+          oldestAccess = item.lastAccessed;
+          oldestKey = k;
+        }
+      }
+      
+      if (oldestKey) {
         this.cache.delete(oldestKey);
       }
     }
-    this.cache.set(key, { value, timestamp: Date.now() });
+    
+    const now = Date.now();
+    this.cache.set(key, { 
+      value, 
+      timestamp: now,
+      lastAccessed: now
+    });
   }
 
   get(key: string): T | undefined {
@@ -33,7 +49,9 @@ export class Cache<T> {
       this.cache.delete(key);
       return undefined;
     }
-
+    
+    // 更新最后访问时间
+    item.lastAccessed = Date.now();
     return item.value;
   }
 
@@ -44,4 +62,4 @@ export class Cache<T> {
 
 // 创建翻译和音频缓存实例
 export const translationCache = new Cache<string>(100, 3600000);
-export const audioCache = new Cache<string>(50, 3600000); 
+export const audioCache = new Cache<string>(50, 3600000);
