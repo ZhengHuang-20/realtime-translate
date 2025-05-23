@@ -16,7 +16,8 @@ export const SUPPORTED_LANGUAGES: Language[] = [
 
 // 优化配置参数
 // 将SILENCE_THRESHOLD从500毫秒增加到更合理的值，如2000-3000毫秒
-export const SILENCE_THRESHOLD = 2500; // 2.5秒
+// 将静默阈值从2500毫秒减少到1000-1500毫秒
+export const SILENCE_THRESHOLD = 1200; // 1.2秒
 export const AUDIO_SAMPLE_RATE = 44100;
 export const MAX_RECORDING_TIME = 60000;
 export const AUDIO_CACHE_TIME = 3600000; // 1小时音频缓存

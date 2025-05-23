@@ -80,32 +80,35 @@ export default function Home() {
     try {
       logger.info('Starting translation', { text });
       setIsTranslating(true);
-
+  
+      // 立即显示用户输入，提供即时反馈
+      setTranslations(prev => [{
+        sourceText: text,
+        translatedText: '翻译中...' // 显示翻译中状态
+      }, ...prev]);
+  
       const response = await fetch('/api/translate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, targetLanguage }),
       });
-
+  
       if (!response.ok) throw new Error('Translation failed');
-
+  
       const { translation } = await response.json();
       logger.info('Translation received', { translation });
       
-      // 修改这里，只将新翻译添加到数组的开头
-      setTranslations(prev => [{
-        sourceText: text,
-        translatedText: translation
-      }, ...prev]);
-
-      // 使用增强的TTS功能
+      // 更新翻译结果
+      setTranslations(prev => [
+        { sourceText: text, translatedText: translation },
+        ...prev.filter(item => item.sourceText !== text)
+      ]);
+  
+      // 并行开始语音合成，不等待其完成
       if (shouldSpeak && window.speechSynthesis) {
-        try {
-          await speakTextEnhanced(translation, targetLanguage);
-          logger.info('Enhanced TTS completed', { targetLanguage });
-        } catch (speechError) {
+        speakTextEnhanced(translation, targetLanguage).catch(error => {
           logger.error('Enhanced TTS failed', {
-            error: speechError instanceof Error ? speechError.message : speechError
+            error: error instanceof Error ? error.message : error
           });
           // 回退到基本TTS
           try {
@@ -115,7 +118,7 @@ export default function Home() {
           } catch (fallbackError) {
             logger.error('Fallback TTS also failed', { error: fallbackError });
           }
-        }
+        });
       }
       
       setCurrentSourceText('');
