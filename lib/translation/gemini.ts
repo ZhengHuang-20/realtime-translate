@@ -37,7 +37,7 @@ export async function translateText(
     
     while (retries < maxRetries) {
       try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
         const prompt = getTranslationPrompt(text, targetLanguage);
         const result = await model.generateContent(prompt);
         let translation = result.response.text().trim()

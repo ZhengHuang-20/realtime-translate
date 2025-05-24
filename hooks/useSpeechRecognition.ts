@@ -1,19 +1,9 @@
 // hooks/useSpeechRecognition.ts
 import { useState, useRef, useCallback, useEffect } from 'react';
 // 假设你的 logger 和常量路径如下
-// import { logger } from '@/lib/utils/logger';
-// import { SILENCE_THRESHOLD } from '@/lib/utils/constants';
+import { logger } from '@/lib/utils/logger';
+import { SILENCE_THRESHOLD } from '@/lib/utils/constants';
 
-// --- Mocking logger and SILENCE_THRESHOLD for standalone example ---
-const SILENCE_THRESHOLD = 2500; // 默认静默阈值 (毫秒)
-const logger = {
-  info: (...args: any[]) => console.log('[INFO]', ...args),
-  error: (...args: any[]) => console.error('[ERROR]', ...args),
-  performance: (label: string, startTime: number) => {
-    const duration = Date.now() - startTime;
-    console.log(`[PERF] ${label}: ${duration}ms`);
-  },
-};
 // --- End Mocking ---
 
 declare global {

@@ -31,6 +31,8 @@ export default function Home() {
   const { logout, user } = useAuth();
   const [sourceLanguage, setSourceLanguage] = useState('zh-CN');
   const [targetLanguage, setTargetLanguage] = useState('en-US');
+  // 添加语音合成控制状态
+  const [enableSpeech, setEnableSpeech] = useState(true);
   // 修改状态管理，使用数组存储所有的翻译记录
   const [translations, setTranslations] = useState<Array<{
     sourceText: string;
@@ -105,7 +107,7 @@ export default function Home() {
       ]);
   
       // 并行开始语音合成，不等待其完成
-      if (shouldSpeak && window.speechSynthesis) {
+      if (shouldSpeak && enableSpeech && window.speechSynthesis) {
         speakTextEnhanced(translation, targetLanguage).catch(error => {
           logger.error('Enhanced TTS failed', {
             error: error instanceof Error ? error.message : error
@@ -168,6 +170,22 @@ export default function Home() {
                     onChange={setTargetLanguage}
                     label="Target Language"
                   />
+                </div>
+                
+                {/* 添加语音合成控制开关 */}
+                <div className="flex items-center justify-end">
+                  <label className="inline-flex items-center cursor-pointer">
+                    <span className="mr-3 text-sm font-medium text-gray-700">语音朗读</span>
+                    <div className="relative">
+                      <input 
+                        type="checkbox" 
+                        className="sr-only peer" 
+                        checked={enableSpeech}
+                        onChange={() => setEnableSpeech(!enableSpeech)}
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </div>
+                  </label>
                 </div>
                 
                 <AudioRecorder

@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 使用更快的模型
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }); // 使用flash模型而非pro模型
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' }); // 使用flash模型而非pro模型
 
     let prompt = '';
     if (targetLanguage === 'en-US') {
