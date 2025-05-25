@@ -88,7 +88,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         transcript: '',
         warning: '未识别到文本',
-        details: response.error || 'API returned an empty result set.'
+        details: 'API returned an empty result set.'
       });
     }
 
